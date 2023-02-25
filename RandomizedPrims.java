@@ -86,10 +86,6 @@ public class RandomizedPrims {
         }
     }
 
-    public boolean isEmpty(int cell) {
-        return cell == 0 || cell == this.FRONTIER;
-    }
-
     public void run() {
         Random r = new Random();
 
@@ -110,8 +106,9 @@ public class RandomizedPrims {
             int ny = n[1];
 
             int dir = getDirection(fx, fy, nx, ny);
-            this.grid[y][x] |= dir;
-            this.grid[ny][nx] |= this.opposite.get(dir);
+            this.grid[fy][fx] |= dir;
+            int opp = this.opposite.get(dir);
+            this.grid[ny][nx] |= opp;
             mark(fx, fy);
         }
     }
@@ -126,38 +123,28 @@ public class RandomizedPrims {
     }
 
     public void printMaze() {
-        System.out.print("");
-        for (int i = 0; i < this.width; i++) {
-            System.out.print(" _");
+        System.out.print(" ");
+        for (int i = 0; i < this.width * 2 - 1; i++) {
+            System.out.print("_");
         }
         System.out.printf(" \n");
 
         for (int y = 0; y < this.height; y++) {
             System.out.print("|");
             for (int x = 0; x < this.width; x++) {
-                if (this.isEmpty(this.grid[y][x]) && (y + 1 < this.height) && this.isEmpty(this.grid[y + 1][x])) {
+                if ((this.grid[y][x] & this.S) != 0) {
                     System.out.print(" ");
                 } else {
-                    String c = ((this.grid[y][x] & this.S) != 0) ? " " : "_";
-                    System.out.print(c);
+                    System.out.print("_");
                 }
 
-                if (this.isEmpty(this.grid[y][x]) && x + 1 < this.width) {
-                    // (y+1 < grid.length && (empty?(grid[y+1][x]) || empty?(grid[y+1][x+1]))) ? " "
-                    // : "_"
-                    if (this.isEmpty(this.grid[y][x + 1])) {
-                        String c = ((y + 1 < this.height) && this.isEmpty(grid[y + 1][x])
-                                || this.isEmpty(this.grid[y + 1][x + 1])) ? " " : "_";
-                        System.out.print(c);
-                    } else {
-                        System.out.print(" ");
-                    }
-                } else if ((this.grid[y][x] & this.E) != 0) {
+                if ((this.grid[y][x] & this.E) != 0) {
                     if (x + 1 < this.width) {
-                        String c = (((this.grid[y][x] | this.grid[y][x + 1]) & this.S) != 0) ? " " : "_";
-                        System.out.print(c);
-                    } else {
-                        System.out.print(" ");
+                        if (((this.grid[y][x] | this.grid[y][x + 1]) & this.S) != 0) {
+                            System.out.print(" ");
+                        } else {
+                            System.out.print("_");
+                        }
                     }
                 } else {
                     System.out.print("|");
