@@ -89,19 +89,19 @@ public class RandomizedPrims {
     public void run() {
         Random r = new Random();
 
-        int x = r.nextInt(0, width);
-        int y = r.nextInt(0, height);
+        int x = r.nextInt(width);
+        int y = r.nextInt(height);
 
         mark(x, y);
 
         while (!this.frontiers.isEmpty()) {
-            int[] f = this.frontiers.remove(r.nextInt(0, this.frontiers.size()));
+            int[] f = this.frontiers.remove(r.nextInt(this.frontiers.size()));
             int fx = f[0];
             int fy = f[1];
 
             List<int[]> neighbors = getNeighbors(fx, fy);
 
-            int[] n = neighbors.get(r.nextInt(0, neighbors.size()));
+            int[] n = neighbors.get(r.nextInt(neighbors.size()));
             int nx = n[0];
             int ny = n[1];
 
