@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.util.Random;
@@ -44,7 +43,7 @@ public class MazeGeneratorDFS extends JPanel {
 
     private void dfs(int i, int j) {
         visited[i][j] = true;
-        int[] directions = {0, 1, 2, 3};
+        int[] directions = { 0, 1, 2, 3 };
         shuffleArray(directions, random);
 
         for (int direction : directions) {
@@ -129,4 +128,3 @@ public class MazeGeneratorDFS extends JPanel {
         frame.setVisible(true);
     }
 }
-
