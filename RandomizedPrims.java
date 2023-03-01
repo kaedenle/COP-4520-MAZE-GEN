@@ -4,7 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class RandomizedPrims {
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import java.awt.Dimension;
+import java.awt.Graphics;
+
+public class RandomizedPrims extends JPanel {
     private int width;
     private int height;
     private int[][] grid;
@@ -27,6 +32,8 @@ public class RandomizedPrims {
         this.opposite.put(this.S, this.N);
         this.opposite.put(this.E, this.W);
         this.opposite.put(this.W, this.E);
+        setPreferredSize(new Dimension(width * 20, height * 20));
+        this.run();
     }
 
     public void addFrontier(int x, int y) {
@@ -155,9 +162,37 @@ public class RandomizedPrims {
 
     }
 
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        for (int i = 0; i < this.height; i++) {
+            for (int j = 0; j < this.width; j++) {
+                int x = j * 20;
+                int y = i * 20;
+
+                if ((this.grid[i][j] & this.N) == 0) // Top wall
+                    g.drawLine(x, y, x + 20, y);
+
+                if ((this.grid[i][j] & this.E) == 0) // Right wall
+                    g.drawLine(x + 20, y, x + 20, y + 20);
+
+                if ((this.grid[i][j] & this.S) == 0) // Bottom wall
+                    g.drawLine(x + 20, y + 20, x, y + 20);
+
+                if ((this.grid[i][j] & this.W) == 0) // Left wall
+                    g.drawLine(x, y + 20, x, y);
+            }
+        }
+    }
+
     public static void main(String[] args) {
-        RandomizedPrims rp = new RandomizedPrims(10, 10);
-        rp.run();
-        rp.printMaze();
+        RandomizedPrims rp = new RandomizedPrims(20, 20);
+        JFrame frame = new JFrame("Maze Generator");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
+        frame.add(rp);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
 }
