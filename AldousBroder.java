@@ -1,3 +1,4 @@
+import java.awt.Graphics;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -5,7 +6,12 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Random;
 
-class Maze{
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import java.awt.Dimension;
+import java.awt.Graphics;
+
+class Maze extends JPanel{
 	public int[][] grid;
 	private int rows;
 	private int cols;
@@ -16,6 +22,7 @@ class Maze{
 		this.rows = rows;
 		this.cols = cols;
 		this.generate();
+		setPreferredSize(new Dimension(cols * 20, rows * 20));
 	}
 	
 	//generate the maze
@@ -108,15 +115,37 @@ class Maze{
 	        }
 	
 	    }
+	 @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        for (int i = 0; i < this.rows; i++) {
+            for (int j = 0; j < this.cols; j++) {
+                int x = j * 20;
+                int y = i * 20;
+
+                if ((this.grid[i][j] & bitmasks[0]) == 0) // Top wall
+                    g.drawLine(x, y, x + 20, y);
+
+                if ((this.grid[i][j] & bitmasks[1]) == 0) // Right wall
+                    g.drawLine(x + 20, y, x + 20, y + 20);
+
+                if ((this.grid[i][j] & bitmasks[2]) == 0) // Bottom wall
+                    g.drawLine(x + 20, y + 20, x, y + 20);
+
+                if ((this.grid[i][j] & bitmasks[3]) == 0) // Left wall
+                    g.drawLine(x, y + 20, x, y);
+            }
+        }
+    }
         
 }
 
 public class AldousBroder {
 	
 	public static void main(String[] args) {
-		int timesRun = 300;
-        int N = 200;
-        Maze m;
+		int timesRun = 1;
+        int N = 20;
+        Maze m = new Maze(N, N);
 		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/timeOutput.txt");
 		String output = "";
 		for(int i = 0; i <= timesRun; i++) {
@@ -138,6 +167,13 @@ public class AldousBroder {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        JFrame frame = new JFrame("Maze Generator");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
+        frame.add(m);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
 		
 
 	}
