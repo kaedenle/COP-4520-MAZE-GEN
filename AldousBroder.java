@@ -108,6 +108,7 @@ class Maze{
 	        }
 	
 	    }
+        
 }
 
 public class AldousBroder {
@@ -115,12 +116,13 @@ public class AldousBroder {
 	public static void main(String[] args) {
 		int timesRun = 300;
         int N = 200;
+        Maze m;
 		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/timeOutput.txt");
 		String output = "";
 		for(int i = 0; i <= timesRun; i++) {
 			long startTime = System.nanoTime();
 			//STUFF HERE
-			Maze m = new Maze(N, N);
+			m = new Maze(N, N);
 			//m.printRaw();
 			//m.printMaze();
 			long endTime = System.nanoTime();
@@ -129,6 +131,7 @@ public class AldousBroder {
             if(i == 0) continue;
 	        output += timeOutput + "\n";
 		}
+
         try {
             Files.writeString(fileName, (output));
         } catch (IOException e) {
