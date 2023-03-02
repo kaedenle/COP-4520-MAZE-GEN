@@ -1,3 +1,7 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -30,6 +34,8 @@ class Maze{
 		//your next step
 		//north, east, south, west
 		int[][] deltas = {{-1, 0},{0, 1},{1, 0},{0, -1}};
+		int lastDirection = -1;
+		String[] directions = {"NORTH", "EAST", "SOUTH", "WEST"};
 		
 		//do the stuff
 		while(remaining > 0) {
@@ -58,6 +64,7 @@ class Maze{
 			walk_rows += delta[0];
 			walk_cols += delta[1];
 			//Optimization to prevent going backwards
+			lastDirection = direction;
 			//System.out.println(directions[direction] + " " + grid[walk_rows][walk_cols]);
 		}
 	}
@@ -106,15 +113,29 @@ class Maze{
 public class AldousBroder {
 	
 	public static void main(String[] args) {
-		long startTime = System.nanoTime();
-		//STUFF HERE
-		Maze m = new Maze(50, 50);
-		//m.printRaw();
-		m.printMaze();
-		long endTime = System.nanoTime();
-        double totalTime = (endTime - startTime);
-        String timeOutput = (totalTime/1000000000 + " s");
-        System.out.println(timeOutput);
+		int timesRun = 300;
+        int N = 200;
+		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/timeOutput.txt");
+		String output = "";
+		for(int i = 0; i <= timesRun; i++) {
+			long startTime = System.nanoTime();
+			//STUFF HERE
+			Maze m = new Maze(N, N);
+			//m.printRaw();
+			//m.printMaze();
+			long endTime = System.nanoTime();
+	        double totalTime = (endTime - startTime);
+	        String timeOutput = (totalTime/1000000 + " ms");
+            if(i == 0) continue;
+	        output += timeOutput + "\n";
+		}
+        try {
+            Files.writeString(fileName, (output));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+		
 
 	}
 
