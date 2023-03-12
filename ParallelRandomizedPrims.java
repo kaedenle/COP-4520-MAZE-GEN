@@ -16,7 +16,7 @@ public class ParallelRandomizedPrims {
     private int E = 4;
     private int W = 8;
     private Map<Integer, Integer> opposite;
-    // for created the threads
+    // for creating the threads
     private int[][] directions = {
             { -1, 0 }, // up
             { 1, 0 }, // down
@@ -24,6 +24,7 @@ public class ParallelRandomizedPrims {
             { 0, 1 } // left
     };
     private Thread[] threads = new Thread[4];
+    private MarkThread[] markThreads = new MarkThread[4];
 
     public ParallelRandomizedPrims(int width, int height) {
         this.width = width;
@@ -35,6 +36,37 @@ public class ParallelRandomizedPrims {
         this.opposite.put(this.S, this.N);
         this.opposite.put(this.E, this.W);
         this.opposite.put(this.W, this.E);
+        for (int i = 0; i < 4; i++) {
+            this.markThreads[i] = new MarkThread(0, 0);
+            this.threads[i] = new Thread(this.markThreads[i]);
+        }
+    }
+
+    class MarkThread implements Runnable {
+        private int x;
+        private int y;
+
+        public MarkThread(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public void setXandY(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        /*
+         * This method checks to see if the index for the cell is not out of bounds and
+         * is equal to 0. If both are true, add to the frontier cell list.
+         */
+        @Override
+        public void run() {
+            if (this.x >= 0 && this.y >= 0 && this.x < width && this.y < height && grid[y][x] == 0) {
+                grid[y][x] |= FRONTIER;
+                frontiers.add(new int[] { this.x, this.y });
+            }
+        }
     }
 
     public void mark(int x, int y) {
@@ -42,27 +74,6 @@ public class ParallelRandomizedPrims {
          * This class represents a parallel version of the addFrontier method in the
          * sequential RandomizedPrims code.
          */
-        class MarkThread implements Runnable {
-            private int x;
-            private int y;
-
-            public MarkThread(int x, int y) {
-                this.x = x;
-                this.y = y;
-            }
-
-            /*
-             * This method checks to see if the index for the cell is not out of bounds and
-             * is equal to 0. If both are true, add to the frontier cell list.
-             */
-            @Override
-            public void run() {
-                if (this.x >= 0 && this.y >= 0 && this.x < width && this.y < height && grid[y][x] == 0) {
-                    grid[y][x] |= FRONTIER;
-                    frontiers.add(new int[] { this.x, this.y });
-                }
-            }
-        }
 
         this.grid[y][x] |= this.IN;
 
@@ -72,7 +83,9 @@ public class ParallelRandomizedPrims {
          * Create four threads (one for each potential frontier cell).
          */
         for (int[] d : this.directions) {
-            this.threads[i] = new Thread(new MarkThread(x + d[0], y + d[1]));
+            // this.threads[i] = new Thread(new MarkThread(x + d[0], y + d[1]));
+            this.markThreads[i].setXandY(x + d[0], y + d[1]);
+            this.threads[i] = new Thread(this.markThreads[i]);
             this.threads[i].start();
             i += 1;
         }
@@ -161,9 +174,18 @@ public class ParallelRandomizedPrims {
          * 6. Mark the frontier cell as being inside the maze
          */
         while (!this.frontiers.isEmpty()) {
-            int[] f = this.frontiers.remove(r.nextInt(this.frontiers.size()));
-            int fx = f[0];
-            int fy = f[1];
+            int[] f;
+            int fx;
+            int fy;
+            try {
+                f = this.frontiers.remove(r.nextInt(this.frontiers.size()));
+                fx = f[0];
+                fy = f[1];
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+                System.out.println(this.frontiers.size());
+                break;
+            }
 
             List<int[]> neighbors = getNeighbors(fx, fy);
 
