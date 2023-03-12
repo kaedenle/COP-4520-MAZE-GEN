@@ -4,7 +4,7 @@ Implements three maze generation algorithms including Randomized Prim's, Aldous 
 
 ## Build Steps
 
-There are 3 files: AldousBorder.java, MazeGeneratorDFS.java, and RandomizedPrims.java. Each file implements a different algorithm and has its own main method.
+There are 4 files: AldousBorder.java, MazeGeneratorDFS.java, and RandomizedPrims.java, and MazeVisualizer.java. Each file implements a different algorithm and has its own main method except for RandomizedPrims (this file uses MazeVisualizer.java)
 
 To compile and run:
 <br>
@@ -14,6 +14,6 @@ To compile and run:
 
 Example:
 <br>
-`javac RandomizedPrims.java`
+`javac MazeVisualizer.java`
 <br>
-`java RandomizedPrims`
+`java MazeVisualizer`
