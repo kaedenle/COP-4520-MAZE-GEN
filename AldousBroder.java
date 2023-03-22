@@ -10,25 +10,44 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Color;
 
 class Maze extends JPanel{
 	public int[][] grid;
 	private int rows;
 	private int cols;
+	private int walk_rows;
+	private int walk_cols;
 	private int[] bitmasks = {1, 2, 4, 8};
+	public JFrame frame;
+	public int[][] deltas = {{-1, 0},{0, 1},{1, 0},{0, -1}};
+    private boolean StepMode;
 	
-	public Maze(int rows, int cols) {
+	public Maze(int rows, int cols, boolean StepMode) {
 		grid = new int[rows][cols];
 		this.rows = rows;
 		this.cols = cols;
+		if(StepMode)
+		{
+			frame = new JFrame("Maze Generator");
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		    frame.setResizable(true);
+		    frame.setSize(rows*30,cols*30);
+		    frame.add(this);
+		    frame.setLocationRelativeTo(null);
+		    frame.setVisible(true);
+		}
+		
 		this.generate();
+		this.StepMode = StepMode;
+		
 		setPreferredSize(new Dimension(cols * 20, rows * 20));
 	}
 	
 	//generate the maze
 	public void generate() {
-		int walk_rows = new Random().nextInt(rows);
-		int walk_cols = new Random().nextInt(cols);
+		walk_rows = new Random().nextInt(rows);
+		walk_cols = new Random().nextInt(cols);
 		
 		//fill grid with 0s
 		for(int i = 0; i < rows; i++) 
@@ -40,9 +59,6 @@ class Maze extends JPanel{
 		//N = 1, E = 2, S = 4, W = 8 
 		//your next step
 		//north, east, south, west
-		int[][] deltas = {{-1, 0},{0, 1},{1, 0},{0, -1}};
-		int lastDirection = -1;
-		String[] directions = {"NORTH", "EAST", "SOUTH", "WEST"};
 		
 		//do the stuff
 		while(remaining > 0) {
@@ -71,8 +87,18 @@ class Maze extends JPanel{
 			walk_rows += delta[0];
 			walk_cols += delta[1];
 			//Optimization to prevent going backwards
-			lastDirection = direction;
 			//System.out.println(directions[direction] + " " + grid[walk_rows][walk_cols]);
+			if(StepMode) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				frame.validate();
+				frame.repaint();
+			}
+			
 		}
 	}
 	public void printRaw() {
@@ -118,22 +144,41 @@ class Maze extends JPanel{
 	 @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        g.setColor(new Color(0, 255, 0));
+        g.fillRect(walk_cols * 20, walk_rows * 20, 20, 20);
+        g.setColor(new Color(0, 0, 0));
         for (int i = 0; i < this.rows; i++) {
             for (int j = 0; j < this.cols; j++) {
+            	int amount = 0;
                 int x = j * 20;
                 int y = i * 20;
 
                 if ((this.grid[i][j] & bitmasks[0]) == 0) // Top wall
-                    g.drawLine(x, y, x + 20, y);
-
+                {
+                	g.drawLine(x, y, x + 20, y);
+                	amount += 1;
+                }     
                 if ((this.grid[i][j] & bitmasks[1]) == 0) // Right wall
-                    g.drawLine(x + 20, y, x + 20, y + 20);
-
+                {
+                	g.drawLine(x + 20, y, x + 20, y + 20);
+                	amount += 1;
+                }
                 if ((this.grid[i][j] & bitmasks[2]) == 0) // Bottom wall
-                    g.drawLine(x + 20, y + 20, x, y + 20);
-
+                {    
+                	g.drawLine(x + 20, y + 20, x, y + 20);
+                	amount += 1;
+                }    
                 if ((this.grid[i][j] & bitmasks[3]) == 0) // Left wall
-                    g.drawLine(x, y + 20, x, y);
+                {
+                	g.drawLine(x, y + 20, x, y);
+                	amount += 1;
+                }
+                if(amount > 3)
+                {
+                	g.setColor(new Color(220, 220, 220));
+                    g.fillRect(x + 1, y + 1, 19, 19);
+                    g.setColor(new Color(0, 0, 0));
+                }
             }
         }
     }
@@ -143,39 +188,35 @@ class Maze extends JPanel{
 public class AldousBroder {
 	
 	public static void main(String[] args) {
-		int timesRun = 1;
+		boolean stepMode = false;
+		int timesRun = 50;
         int N = 20;
-        Maze m = new Maze(N, N);
+        Maze m = new Maze(N, N, stepMode);
 		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/timeOutput.txt");
 		String output = "";
-		for(int i = 0; i <= timesRun; i++) {
-			long startTime = System.nanoTime();
-			//STUFF HERE
-			m = new Maze(N, N);
-			//m.printRaw();
-			//m.printMaze();
-			long endTime = System.nanoTime();
-	        double totalTime = (endTime - startTime);
-	        String timeOutput = (totalTime/1000000 + " ms");
-            if(i == 0) continue;
-	        output += timeOutput + "\n";
+		if(!stepMode) {
+			for(int i = 0; i <= timesRun; i++) {
+				long startTime = System.nanoTime();
+				//STUFF HERE
+				m = new Maze(N, N, stepMode);
+				//m.printRaw();
+				//m.printMaze();
+				long endTime = System.nanoTime();
+		        double totalTime = (endTime - startTime);
+		        String timeOutput = (totalTime/1000000 + " ms");
+	            if(i == 0) continue;
+		        output += timeOutput + "\n";
+			}
+
+	        try {
+	            Files.writeString(fileName, (output));
+	        } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+	        }
 		}
-
-        try {
-            Files.writeString(fileName, (output));
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        JFrame frame = new JFrame("Maze Generator");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(false);
-        frame.add(m);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
 		
-
+        
 	}
 
 }
