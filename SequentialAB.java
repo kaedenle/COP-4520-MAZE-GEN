@@ -10,7 +10,6 @@ import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Color;
 
 class Maze extends JPanel{

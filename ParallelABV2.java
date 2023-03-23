@@ -1,10 +1,10 @@
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.JFrame;
@@ -22,14 +22,13 @@ class MazeObj2 extends JPanel{
 	//amount of rows and cols grid is split into
 	public int RowAmount = 1;
 	public int ColAmount = 1;
-	//NESW
-	//N = 1, E = 2, S = 4, W = 8 
+	
 	public int[] bitmasks = {1, 2, 4, 8};
 	public int[][] deltas = {{-1, 0},{0, 1},{1, 0},{0, -1}};
+	public Node2[] nList; 
 	//Amount of threads
 	public int N;
-	public Node2[] nList; 
-	
+	public JFrame frame;
 	
 	public MazeObj2(int rows, int cols, int N) {
 		//the actual maze
@@ -37,6 +36,14 @@ class MazeObj2 extends JPanel{
 		this.rows = rows;
 		this.cols = cols;
 		this.N = N;
+		//frame stuff
+		frame = new JFrame("Maze Generator");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    frame.setResizable(true);
+	    frame.setSize(rows*30,cols*30);
+	    frame.add(this);
+	    frame.setLocationRelativeTo(null);
+	    frame.setVisible(true);
 		
 		//this.remaining = new AtomicInteger(rows * cols - 1);
 		BoundsCalc();
@@ -49,11 +56,12 @@ class MazeObj2 extends JPanel{
 		
 		setPreferredSize(new Dimension(cols * 20, rows * 20));
 	}
-	
 	public void SetNList(int n)
 	{
 		nList = new Node2[n];
 	}
+	
+	//calculate how many seperate cols and rows there will be based on number of threads
 	private void BoundsCalc() {
 		int MAX = N;
 		int i = 1;
@@ -112,9 +120,6 @@ class MazeObj2 extends JPanel{
 	}
 	 protected void paintComponent(Graphics g) {
 	        super.paintComponent(g);
-	        /*g.setColor(new Color(0, 255, 0));
-	        g.fillRect(walk_cols * 20, walk_rows * 20, 20, 20);
-	        g.setColor(new Color(0, 0, 0));*/
 	        g.setColor(new Color(100, 100, 100));
 	        for (int i = 0; i < this.rows; i++) {
 	            for (int j = 0; j < this.cols; j++) {
@@ -142,22 +147,27 @@ class MazeObj2 extends JPanel{
 	                	g.drawLine(x, y + 20, x, y);
 	                	amount += 1;
 	                }
-	                /*if(amount > 3)
+	                if(amount > 3)
 	                {
 	                	g.setColor(new Color(220, 220, 220));
 	                    g.fillRect(x + 1, y + 1, 19, 19);
 	                    g.setColor(new Color(0, 0, 0));
-	                }*/
+	                }
 	            }
 	        }
+	        g.setColor(new Color(0, 255, 0));
+        	for(Node2 n : nList) {
+        		if(n == null) continue;
+		        g.fillRect(n.poscols * 20, n.posrows * 20, 20, 20);
+        	}
 	        //Draw the boundaries of each thread
 	        //set stroke to be more noticable
 	        Graphics2D g2 = (Graphics2D) g;
 	        g2.setStroke(new BasicStroke(2));
 	        
-	        /*g.setColor(new Color(255, 0, 0));
+	        g.setColor(new Color(255, 0, 0));
 	        //draw column boundaries
-	        for(int i = 1; i < ColAmount; i++) {
+	        /*for(int i = 1; i < ColAmount; i++) {
 	        	int max = (int)(((float)i/(float)ColAmount) * cols);
 	        	g.drawLine(max * 20, 0, max * 20, 20 * cols);
 	        }
@@ -171,16 +181,18 @@ class MazeObj2 extends JPanel{
 }
 class Node2 implements Runnable{
 	public static MazeObj2 Maze;
-	public static int threashold = 50;
 	public int posrows;
 	public int poscols;
 	public int startingrow;
 	public int startingcol;
 	private int ID;
 	private int remaining;
+	public static AtomicInteger count = new AtomicInteger(0);
 	public static final Object lock = new Object();
-	//how many threads are still working (used to tell all threads to start culling borders)
+	public static final Object lockOther = new Object();
 	public static AtomicInteger total;
+	public static int threashold = 50;
+	
 	//0: UP 1: RIGHT 2: DOWN 3: LEFT
 	public int[] bounds = new int[4];
 	
@@ -190,8 +202,8 @@ class Node2 implements Runnable{
 			MazeInit(r, c, N);
 		BoundsCalc(rID, cID);
 		//produce random position within box
-		posrows = new Random().nextInt(Math.abs(bounds[2] - bounds[0])) + bounds[0];
-		poscols = new Random().nextInt(Math.abs(bounds[3] - bounds[1])) + bounds[1];
+		posrows = new Random().nextInt(bounds[2] - bounds[0]) + bounds[0];
+		poscols = new Random().nextInt(bounds[3] - bounds[1]) + bounds[1];
 		startingrow = posrows;
 		startingcol = poscols;
 	}
@@ -203,11 +215,11 @@ class Node2 implements Runnable{
 		ColGroup = cID % ColAmount;
 		RowGroup = rID % RowAmount;
 		bounds[1] = (int)((float)ColGroup/(float)ColAmount * Maze.cols);
-		//not included (right)
+		//not included
 		bounds[3] = (int)((float)(ColGroup + 1)/(float)ColAmount * Maze.cols);
 		
 		bounds[0] = (int)((float)RowGroup/(float)RowAmount * Maze.rows);
-		//not included (down)
+		//not included
 		bounds[2] = (int)((float)(RowGroup + 1)/(float)RowAmount* Maze.rows);
 		//System.out.println("COLS: " + bounds[0] + " " + bounds[2] + "\nROWS:" + bounds[1] + " " + bounds[3]);
 		
@@ -217,33 +229,26 @@ class Node2 implements Runnable{
 	
 	public static void MazeInit(int r, int c, int N) {
 		Maze = new MazeObj2(r, c, N);
+		//total amount of threads still doing work
 		total = new AtomicInteger(N);
 	}
-	//Erase portions of the right and bottom borders to make one spanning tree
-	//wait till last thread finishes in their sector than start
-	/*
-	 * this is easier implementation wise. It doesn't matter if threads wait to cull, since this operation takes a set time
-	 * every thread will finish culling at around the same time if they start at the same time. 
-	 * Any time loss from not pre-culling the borders is minimal.
-	*/
 	public void CullBorders() {
 		//wait till final thread is done
-		synchronized(lock)
+		synchronized(lockOther)
 		{ 
-		  total.decrementAndGet();
 		  //if total is not 0, wait
 		  if(0 < total.get())
 		  { 
 		    try {
 		    	//System.out.println(Thread.currentThread().getId() + " Waiting " + count.get() + " " + Maze.N);
-				lock.wait();
+		    	lockOther.wait();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		  }
 		  else {
-			  lock.notifyAll();
+			  lockOther.notifyAll();
 		  }
 		}
 		//guarentee that at least one gets culled by culling last one if none was picked
@@ -305,6 +310,37 @@ class Node2 implements Runnable{
 				Maze.grid[posrows - delta[0]][poscols - delta[1]] |= Maze.bitmasks[direction];
 				remaining -= 1;
 			}
+			//for visualization purposes
+			synchronized(lock)
+			{ 
+			  count.incrementAndGet();
+			  if(count.get() < total.get())
+			  { 
+			    try {
+			    	//System.out.println(Thread.currentThread().getId() + " Waiting " + count.get() + " " + Maze.N);
+					lock.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			  }
+			  if(count.get() != 0 || remaining <= 0) {
+				  //System.out.println(Thread.currentThread().getId() + " Unlocking");
+				  Maze.frame.validate();
+				  Maze.frame.repaint();
+				  try {
+					Thread.sleep(10);
+				  } 
+				  catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+				  }
+				  count.set(0);
+				  lock.notifyAll();
+				  if(remaining <= 0)
+					  total.decrementAndGet();
+			  }
+			}
 		}
 		CullBorders();
 	}
@@ -313,29 +349,15 @@ public class ParallelABV2 {
 
 	public static void main(String[] args) {
 		//Hard limit on # of threads is N * N as each thread has one square allocated to it
-		//Soft limit is N as you cannot split this up evenly in this implementation (gets weird after N)
-		//Really, don't go past N/2
+		//Soft limit is half of N * N as anything beyond that produces strange mazes
 		//Node2 n = new Node2(10, 10, 0, 50);
-		int NumThreads = 5;
+		int NumThreads = 4;
 		int Dimensions = 10;
-		//insert cmd line args (Maze Size, Thread Num, Threashold)
-		if(args.length >= 1)
-			Dimensions = Integer.valueOf(args[0]);
-		if(args.length >= 2)
-			NumThreads = Integer.valueOf(args[1]);
-		if(args.length >= 3)
-			Node2.threashold = Integer.valueOf(args[2]);
-
+		Node2.threashold = 50;
 		Thread[] tList = new Thread[NumThreads];
 		Node2.MazeInit(Dimensions, Dimensions, NumThreads);
-
-		//some configurations over N can't produce subgrids of approximately equal cells and shape
-		if(Node2.Maze.ColAmount > Dimensions || Node2.Maze.RowAmount > Dimensions) {
-			System.out.println("Row or Col impossible for this amount");
-			return;
-		}
-
 		Node2.Maze.SetNList(NumThreads);
+		//counters to assign threads to quad
 		int rowcounter = 0, colcounter = 0;
 		
 		for(int i = 0; i < NumThreads; i++) {
@@ -361,14 +383,6 @@ public class ParallelABV2 {
         catch (InterruptedException e){
             System.out.println(e);
         }
-		
-		JFrame frame = new JFrame("Maze Generator");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(true);
-        frame.add(Node2.Maze);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
 	}
 
 }
