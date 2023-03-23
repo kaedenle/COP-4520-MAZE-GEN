@@ -42,8 +42,8 @@ class Node implements Runnable{
 			}
 			
 			//if square trying to access is occupied, find a new direction (also try to occupy it)
-			if(Maze.gridflag[posrows + delta[0]][poscols + delta[1]].getAndSet(true))
-				continue;
+			/*if(Maze.gridflag[posrows + delta[0]][poscols + delta[1]].getAndSet(true))
+				continue;*/
 			posrows += delta[0];
 			poscols += delta[1];
 			//if next cell hadn't been visited, set it and the current cell to opposite directions
@@ -54,7 +54,7 @@ class Node implements Runnable{
 				Maze.remaining.decrementAndGet();
 			}
 			//leaving maze set false
-			Maze.gridflag[posrows][poscols].set(false);
+			//Maze.gridflag[posrows][poscols].set(false);
 		}
 	}
 }
@@ -69,12 +69,13 @@ class MazeObj extends JPanel{
 	public AtomicInteger remaining;
 	public int[] bitmasks = {1, 2, 4, 8};
 	public int[][] deltas = {{-1, 0},{0, 1},{1, 0},{0, -1}};
+	private int CellSize = 5;
 	
 	public MazeObj(int rows, int cols) {
 		//the actual maze
 		grid = new int[rows][cols];
 		//detects if a thread is inside a given cell
-		gridflag = new AtomicBoolean[rows][cols];
+		//gridflag = new AtomicBoolean[rows][cols];
 		this.rows = rows;
 		this.cols = cols;
 		startingrow = new Random().nextInt(rows);
@@ -86,11 +87,11 @@ class MazeObj extends JPanel{
 				grid[i][j] = 0;
 		}
 		//fill grid flag with falses
-		for(int i = 0; i < rows; i++) {
+		/*for(int i = 0; i < rows; i++) {
 			for(int j = 0; j < cols; j++)
 				gridflag[i][j] = new AtomicBoolean(false);
-		}
-		setPreferredSize(new Dimension(cols * 20, rows * 20));
+		}*/
+		setPreferredSize(new Dimension(cols * CellSize, rows * CellSize));
 	}
 	public void printRaw() {
 		for(int[] rows : this.grid) {
@@ -140,27 +141,27 @@ class MazeObj extends JPanel{
 	        for (int i = 0; i < this.rows; i++) {
 	            for (int j = 0; j < this.cols; j++) {
 	            	int amount = 0;
-	                int x = j * 20;
-	                int y = i * 20;
+	                int x = j * CellSize;
+	                int y = i * CellSize;
 
 	                if ((this.grid[i][j] & bitmasks[0]) == 0) // Top wall
 	                {
-	                	g.drawLine(x, y, x + 20, y);
+	                	g.drawLine(x, y, x + CellSize, y);
 	                	amount += 1;
 	                }     
 	                if ((this.grid[i][j] & bitmasks[1]) == 0) // Right wall
 	                {
-	                	g.drawLine(x + 20, y, x + 20, y + 20);
+	                	g.drawLine(x + CellSize, y, x + CellSize, y + CellSize);
 	                	amount += 1;
 	                }
 	                if ((this.grid[i][j] & bitmasks[2]) == 0) // Bottom wall
 	                {    
-	                	g.drawLine(x + 20, y + 20, x, y + 20);
+	                	g.drawLine(x + CellSize, y + CellSize, x, y + CellSize);
 	                	amount += 1;
 	                }    
 	                if ((this.grid[i][j] & bitmasks[3]) == 0) // Left wall
 	                {
-	                	g.drawLine(x, y + 20, x, y);
+	                	g.drawLine(x, y + CellSize, x, y);
 	                	amount += 1;
 	                }
 	                /*if(amount > 3)
@@ -176,8 +177,8 @@ class MazeObj extends JPanel{
 public class ParallelABV1 {
 
 	public static void main(String[] args) {
-		int ThreadCount = 5;
-		int Dimension = 100;
+		int ThreadCount = 4;
+		int Dimension = 200;
 		int NumRuns = 300;
 		Thread[] tList = new Thread[ThreadCount];
 		Node[] nList = new Node[ThreadCount];

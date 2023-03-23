@@ -324,8 +324,8 @@ public class ParallelABV2 {
 		//Node2 n = new Node2(10, 10, 0, 50);
 		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/parallelTimeOutput.txt");
 		String output = "";
-		int NumThreads = 8;
-		int Dimensions = 100;
+		int NumThreads = 20;
+		int Dimensions = 200;
 		int NumRuns = 300;
 		//insert cmd line args (Maze Size, Thread Num, Threashold)
 		//Dimension of the maze, make sure it's initialized before this
