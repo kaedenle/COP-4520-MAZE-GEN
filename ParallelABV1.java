@@ -1,10 +1,14 @@
-import java.awt.Color;
+
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -173,24 +177,54 @@ public class ParallelABV1 {
 
 	public static void main(String[] args) {
 		int ThreadCount = 5;
+		int Dimension = 100;
+		int NumRuns = 300;
 		Thread[] tList = new Thread[ThreadCount];
 		Node[] nList = new Node[ThreadCount];
-		for(int i = 0; i < ThreadCount; i++) {
-			nList[i] = new Node(20, 20);
-			tList[i] = new Thread(nList[i]);
+		String output = "";
+		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/parallelTimeOutputOld.txt");
+		//insert cmd line args (Maze Size, Thread Num, Threashold)
+		//Dimension of the maze, make sure it's initialized before this
+		if(args.length >= 1)
+			Dimension = Integer.valueOf(args[0]);
+		//number of threads
+		if(args.length >= 2)
+			ThreadCount = Integer.valueOf(args[1]);
+		if(args.length >= 3)
+			NumRuns = Integer.valueOf(args[2]);
+
+		for(int j = 0; j <= NumRuns; j++){
+			long startTime = System.nanoTime();
+			for(int i = 0; i < ThreadCount; i++) {
+				nList[i] = new Node(Dimension, Dimension);
+				tList[i] = new Thread(nList[i]);
+			}
+			//start all threads
+			for(Thread t : tList)
+				t.start();
+			
+			//wait for all threads to die
+			try{
+				for (Thread thread : tList) {
+					thread.join();
+				}
+			}
+			catch (InterruptedException e){
+				System.out.println(e);
+			}
+
+			long endTime = System.nanoTime();
+	        double totalTime = (endTime - startTime);
+	        String timeOutput = (totalTime/1000000 + " ms");
+			if(j != NumRuns) Node.Maze = null;
+            if(j == 0) continue;
+	        output += timeOutput + "\n";
 		}
-		//start all threads
-		for(Thread t : tList)
-			t.start();
-		
-		//wait for all threads to die
-		try{
-            for (Thread thread : tList) {
-                thread.join();
-            }
-        }
-        catch (InterruptedException e){
-            System.out.println(e);
+		try {
+            Files.writeString(fileName, (output));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 		Node.Maze.printMaze();
 		JFrame frame = new JFrame("Maze Generator");
