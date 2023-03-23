@@ -169,7 +169,7 @@ class MazeObj extends JPanel{
 	        }
 	    }
 }
-public class ConcurrentAldousBroder {
+public class ParallelABV1 {
 
 	public static void main(String[] args) {
 		int ThreadCount = 5;

@@ -1,3 +1,4 @@
+
 import java.awt.Graphics;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -185,7 +186,7 @@ class Maze extends JPanel{
         
 }
 
-public class AldousBroder {
+public class SequentialAB {
 	
 	public static void main(String[] args) {
 		boolean stepMode = false;

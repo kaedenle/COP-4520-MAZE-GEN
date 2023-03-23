@@ -1,3 +1,4 @@
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -234,7 +235,7 @@ class MazeObjs extends JPanel{
 	        }
 	    }
 }
-public class VisualConcurrentAldousBroder {
+public class VisualParallelAB {
 
 	public static void main(String[] args) {
 		int RunAmount = 1;
