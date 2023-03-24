@@ -1,3 +1,4 @@
+
 import java.awt.Graphics;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,7 +10,6 @@ import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Color;
 
 class Maze extends JPanel{
@@ -185,7 +185,7 @@ class Maze extends JPanel{
         
 }
 
-public class AldousBroder {
+public class SequentialAB {
 	
 	public static void main(String[] args) {
 		boolean stepMode = false;

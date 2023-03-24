@@ -1,26 +1,24 @@
-import java.awt.Color;
+
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-class Nodes implements Runnable{
-	public static MazeObjs Maze = null;
+class Node implements Runnable{
+	public static MazeObj Maze = null;
 	int posrows, poscols;
-	public static AtomicInteger count = new AtomicInteger(0);
-	public static final Object lock = new Object();
 	
-	public Nodes(int r, int c, boolean StepMode, int N) {
+	public Node(int r, int c) {
 		if(Maze == null)
-			Maze = new MazeObjs(r, c, StepMode, N);
+			Maze = new MazeObj(r, c);
 		this.poscols = Maze.startingcols;
 		this.posrows = Maze.startingrow;
 	}
@@ -44,8 +42,8 @@ class Nodes implements Runnable{
 			}
 			
 			//if square trying to access is occupied, find a new direction (also try to occupy it)
-			if(Maze.gridflag[posrows + delta[0]][poscols + delta[1]].getAndSet(true))
-				continue;
+			/*if(Maze.gridflag[posrows + delta[0]][poscols + delta[1]].getAndSet(true))
+				continue;*/
 			posrows += delta[0];
 			poscols += delta[1];
 			//if next cell hadn't been visited, set it and the current cell to opposite directions
@@ -56,46 +54,12 @@ class Nodes implements Runnable{
 				Maze.remaining.decrementAndGet();
 			}
 			//leaving maze set false
-			Maze.gridflag[posrows][poscols].set(false);
-			
-			//for visualization purposes
-			if(Maze.StepMode)
-			{
-				synchronized(lock)
-				{ 
-				  count.incrementAndGet();
-				  if(count.get() < Maze.N )
-				  { 
-				    try {
-				    	//System.out.println(Thread.currentThread().getId() + " Waiting " + count.get() + " " + Maze.N);
-						lock.wait();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				  }
-				  if(count.get() != 0) {
-					  //System.out.println(Thread.currentThread().getId() + " Unlocking");
-					  Maze.frame.validate();
-					  Maze.frame.repaint();
-					  try {
-						Thread.sleep(50);
-					  } 
-					  catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-					  }
-					  count.set(0);
-					  lock.notifyAll();
-				  }
-				  //take the action here;
-				}
-			}
+			//Maze.gridflag[posrows][poscols].set(false);
 		}
 	}
 }
 
-class MazeObjs extends JPanel{
+class MazeObj extends JPanel{
 	public int[][] grid;
 	public AtomicBoolean[][] gridflag;
 	public int startingrow;
@@ -105,49 +69,29 @@ class MazeObjs extends JPanel{
 	public AtomicInteger remaining;
 	public int[] bitmasks = {1, 2, 4, 8};
 	public int[][] deltas = {{-1, 0},{0, 1},{1, 0},{0, -1}};
-	public boolean StepMode;
-	public Nodes[] nList; 
-	public int N;
-	public JFrame frame;
+	private int CellSize = 5;
 	
-	public MazeObjs(int rows, int cols, boolean StepMode, int N) {
+	public MazeObj(int rows, int cols) {
 		//the actual maze
 		grid = new int[rows][cols];
 		//detects if a thread is inside a given cell
-		gridflag = new AtomicBoolean[rows][cols];
+		//gridflag = new AtomicBoolean[rows][cols];
 		this.rows = rows;
 		this.cols = cols;
-		this.StepMode = StepMode;
-		nList = new Nodes[N];
-		this.N = N;
-		ResetMaze();
-		if(StepMode)
-		{
-			frame = new JFrame("Maze Generator");
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		    frame.setResizable(true);
-		    frame.setSize(rows*30,cols*30);
-		    frame.add(this);
-		    frame.setLocationRelativeTo(null);
-		    frame.setVisible(true);
-		}
-		setPreferredSize(new Dimension(cols * 20, rows * 20));
-	}
-	public void ResetMaze() {
 		startingrow = new Random().nextInt(rows);
 		startingcols = new Random().nextInt(cols);
+		this.remaining = new AtomicInteger(rows * cols - 1);
 		//fill grid with 0s
 		for(int i = 0; i < rows; i++) {
 			for(int j = 0; j < cols; j++)
 				grid[i][j] = 0;
 		}
-		//reset remaining
-		this.remaining = new AtomicInteger(rows * cols - 1);
 		//fill grid flag with falses
-		for(int i = 0; i < rows; i++) {
+		/*for(int i = 0; i < rows; i++) {
 			for(int j = 0; j < cols; j++)
 				gridflag[i][j] = new AtomicBoolean(false);
-		}
+		}*/
+		setPreferredSize(new Dimension(cols * CellSize, rows * CellSize));
 	}
 	public void printRaw() {
 		for(int[] rows : this.grid) {
@@ -191,92 +135,91 @@ class MazeObjs extends JPanel{
 	    }
 	 protected void paintComponent(Graphics g) {
 	        super.paintComponent(g);
+	        /*g.setColor(new Color(0, 255, 0));
+	        g.fillRect(walk_cols * 20, walk_rows * 20, 20, 20);
+	        g.setColor(new Color(0, 0, 0));*/
 	        for (int i = 0; i < this.rows; i++) {
 	            for (int j = 0; j < this.cols; j++) {
 	            	int amount = 0;
-	                int x = j * 20;
-	                int y = i * 20;
+	                int x = j * CellSize;
+	                int y = i * CellSize;
 
 	                if ((this.grid[i][j] & bitmasks[0]) == 0) // Top wall
 	                {
-	                	g.drawLine(x, y, x + 20, y);
+	                	g.drawLine(x, y, x + CellSize, y);
 	                	amount += 1;
 	                }     
 	                if ((this.grid[i][j] & bitmasks[1]) == 0) // Right wall
 	                {
-	                	g.drawLine(x + 20, y, x + 20, y + 20);
+	                	g.drawLine(x + CellSize, y, x + CellSize, y + CellSize);
 	                	amount += 1;
 	                }
 	                if ((this.grid[i][j] & bitmasks[2]) == 0) // Bottom wall
 	                {    
-	                	g.drawLine(x + 20, y + 20, x, y + 20);
+	                	g.drawLine(x + CellSize, y + CellSize, x, y + CellSize);
 	                	amount += 1;
 	                }    
 	                if ((this.grid[i][j] & bitmasks[3]) == 0) // Left wall
 	                {
-	                	g.drawLine(x, y + 20, x, y);
+	                	g.drawLine(x, y + CellSize, x, y);
 	                	amount += 1;
 	                }
-	                if(amount > 3)
+	                /*if(amount > 3)
 	                {
 	                	g.setColor(new Color(220, 220, 220));
 	                    g.fillRect(x + 1, y + 1, 19, 19);
 	                    g.setColor(new Color(0, 0, 0));
-	                }
+	                }*/
 	            }
-	        }
-	        if(StepMode) {
-	        	g.setColor(new Color(0, 255, 0));
-	        	for(Nodes n : nList) {		
-			        g.fillRect(n.poscols * 20, n.posrows * 20, 20, 20);
-	        	}
-	        	g.setColor(new Color(0, 0, 0));
 	        }
 	    }
 }
-public class VisualConcurrentAldousBroder {
+public class ParallelABV1 {
 
 	public static void main(String[] args) {
-		int RunAmount = 1;
-		boolean StepMode = true;
-		int N = 10;
-		
-		int ThreadCount = 5;
-		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/timeOutputParallel.txt");
+		int ThreadCount = 4;
+		int Dimension = 200;
+		int NumRuns = 300;
+		Thread[] tList = new Thread[ThreadCount];
+		Node[] nList = new Node[ThreadCount];
 		String output = "";
-		if(StepMode)
-			RunAmount = 0;
-		Nodes.Maze = new MazeObjs(N, N, StepMode, ThreadCount);
-		for(int j = 0; j <= RunAmount; j++) {
+		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/parallelTimeOutputOld.txt");
+		//insert cmd line args (Maze Size, Thread Num, Threashold)
+		//Dimension of the maze, make sure it's initialized before this
+		if(args.length >= 1)
+			Dimension = Integer.valueOf(args[0]);
+		//number of threads
+		if(args.length >= 2)
+			ThreadCount = Integer.valueOf(args[1]);
+		if(args.length >= 3)
+			NumRuns = Integer.valueOf(args[2]);
+
+		for(int j = 0; j <= NumRuns; j++){
 			long startTime = System.nanoTime();
-			
-			Thread[] tList = new Thread[ThreadCount];
 			for(int i = 0; i < ThreadCount; i++) {
-				Nodes.Maze.nList[i] = new Nodes(N, N, StepMode, ThreadCount);
-				tList[i] = new Thread(Nodes.Maze.nList[i]);
+				nList[i] = new Node(Dimension, Dimension);
+				tList[i] = new Thread(nList[i]);
 			}
-			
-			Nodes.Maze.N = ThreadCount;
 			//start all threads
 			for(Thread t : tList)
 				t.start();
 			
 			//wait for all threads to die
 			try{
-	            for (Thread thread : tList) {
-	                thread.join();
-	            }
-			}		
-	        catch (InterruptedException e){
-	            System.out.println(e);
-	        }
+				for (Thread thread : tList) {
+					thread.join();
+				}
+			}
+			catch (InterruptedException e){
+				System.out.println(e);
+			}
+
 			long endTime = System.nanoTime();
 	        double totalTime = (endTime - startTime);
 	        String timeOutput = (totalTime/1000000 + " ms");
-	        if(j != RunAmount) Nodes.Maze.ResetMaze();
-			if(j == 0) continue;
-			output += timeOutput + "\n";
-			//if(j != RunAmount) Node.Maze = null;
+			if(j != NumRuns) Node.Maze = null;
+            if(j == 0) continue;
+	        output += timeOutput + "\n";
 		}
 		try {
             Files.writeString(fileName, (output));
@@ -284,16 +227,14 @@ public class VisualConcurrentAldousBroder {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-		Nodes.Maze.printMaze();
-		System.out.println(output);
-		/*JFrame frame = new JFrame("Maze Generator");
+		Node.Maze.printMaze();
+		JFrame frame = new JFrame("Maze Generator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(true);
         frame.add(Node.Maze);
         frame.pack();
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);*/
+        frame.setVisible(true);
 	}
-		
 
 }
