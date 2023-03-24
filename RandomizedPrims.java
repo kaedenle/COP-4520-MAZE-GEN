@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,13 +22,12 @@ public class RandomizedPrims {
         this.width = width;
         this.height = height;
         this.grid = new int[height][width];
-        this.frontiers = new LinkedList<int[]>();
+        this.frontiers = new ArrayList<int[]>();
         this.opposite = new HashMap<>();
         this.opposite.put(this.N, this.S);
         this.opposite.put(this.S, this.N);
         this.opposite.put(this.E, this.W);
         this.opposite.put(this.W, this.E);
-        this.run();
     }
 
     public void addFrontier(int x, int y) {
@@ -114,38 +114,5 @@ public class RandomizedPrims {
         }
 
         return this.grid;
-    }
-
-    public void printMaze() {
-        System.out.print(" ");
-        for (int i = 0; i < this.width * 2 - 1; i++) {
-            System.out.print("_");
-        }
-        System.out.printf(" \n");
-
-        for (int y = 0; y < this.height; y++) {
-            System.out.print("|");
-            for (int x = 0; x < this.width; x++) {
-                if ((this.grid[y][x] & this.S) != 0) {
-                    System.out.print(" ");
-                } else {
-                    System.out.print("_");
-                }
-
-                if ((this.grid[y][x] & this.E) != 0) {
-                    if (x + 1 < this.width) {
-                        if (((this.grid[y][x] | this.grid[y][x + 1]) & this.S) != 0) {
-                            System.out.print(" ");
-                        } else {
-                            System.out.print("_");
-                        }
-                    }
-                } else {
-                    System.out.print("|");
-                }
-            }
-            System.out.printf("\n");
-        }
-
     }
 }

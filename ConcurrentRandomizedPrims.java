@@ -1,10 +1,12 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ParallelRandomizedPrims {
+public class ConcurrentRandomizedPrims {
     private int width;
     private int height;
     private int[][] grid;
@@ -23,37 +25,67 @@ public class ParallelRandomizedPrims {
             { 0, -1 }, // right
             { 0, 1 } // left
     };
-    private Thread[] threads = new Thread[4];
-    private MarkThread[] markThreads = new MarkThread[4];
+    private Thread[] threads = new Thread[2];
+    private MarkThread[] markThreads = new MarkThread[2];
+    private AtomicBoolean mark1 = new AtomicBoolean();
+    private AtomicBoolean mark2 = new AtomicBoolean();
 
-    public ParallelRandomizedPrims(int width, int height) {
+    public ConcurrentRandomizedPrims(int width, int height) {
         this.width = width;
         this.height = height;
         this.grid = new int[height][width];
-        this.frontiers = new LinkedList<int[]>();
+        this.frontiers = new ArrayList<int[]>();
         this.opposite = new HashMap<>();
         this.opposite.put(this.N, this.S);
         this.opposite.put(this.S, this.N);
         this.opposite.put(this.E, this.W);
         this.opposite.put(this.W, this.E);
-        for (int i = 0; i < 4; i++) {
-            this.markThreads[i] = new MarkThread(0, 0);
-            this.threads[i] = new Thread(this.markThreads[i]);
-        }
+        this.markThreads[0] = new MarkThread(0, 0, 0, 0, this.mark1);
+        this.threads[0] = new Thread(this.markThreads[0]);
+        this.markThreads[1] = new MarkThread(0, 0, 0, 0, this.mark2);
+        this.threads[1] = new Thread(this.markThreads[1]);
     }
 
     class MarkThread implements Runnable {
-        private int x;
-        private int y;
+        private int x1;
+        private int y1;
+        private int x2;
+        private int y2;
+        private AtomicBoolean mark;
+        private boolean running;
 
-        public MarkThread(int x, int y) {
-            this.x = x;
-            this.y = y;
+        public MarkThread(int x1, int y1, int x2, int y2, AtomicBoolean mark) {
+            this.x1 = x1;
+            this.y1 = y1;
+            this.x2 = x2;
+            this.y2 = y2;
+            this.mark = mark;
+            this.running = true;
         }
 
-        public void setXandY(int x, int y) {
-            this.x = x;
-            this.y = y;
+        public void setXandY(int x1, int y1, int x2, int y2) {
+            this.x1 = x1;
+            this.y1 = y1;
+            this.x2 = x2;
+            this.y2 = y2;
+        }
+
+        public void stop() {
+            this.running = false;
+        }
+
+        public void addFrontierCells() {
+            synchronized (frontiers) {
+                if (this.x1 >= 0 && this.y1 >= 0 && this.x1 < width && this.y1 < height && grid[y1][x1] == 0) {
+                    grid[y1][x1] |= FRONTIER;
+                    frontiers.add(new int[] { this.x1, this.y1 });
+                }
+
+                if (this.x2 >= 0 && this.y2 >= 0 && this.x2 < width && this.y2 < height && grid[y2][x2] == 0) {
+                    grid[y2][x2] |= FRONTIER;
+                    frontiers.add(new int[] { this.x2, this.y2 });
+                }
+            }
         }
 
         /*
@@ -62,9 +94,11 @@ public class ParallelRandomizedPrims {
          */
         @Override
         public void run() {
-            if (this.x >= 0 && this.y >= 0 && this.x < width && this.y < height && grid[y][x] == 0) {
-                grid[y][x] |= FRONTIER;
-                frontiers.add(new int[] { this.x, this.y });
+            while (this.running) {
+                if (this.mark.get() == false)
+                    continue;
+                this.addFrontierCells();
+                this.mark.set(false);
             }
         }
     }
@@ -77,25 +111,18 @@ public class ParallelRandomizedPrims {
 
         this.grid[y][x] |= this.IN;
 
-        int i = 0;
-
         /*
-         * Create four threads (one for each potential frontier cell).
+         * Create two threads
          */
-        for (int[] d : this.directions) {
-            // this.threads[i] = new Thread(new MarkThread(x + d[0], y + d[1]));
-            this.markThreads[i].setXandY(x + d[0], y + d[1]);
-            this.threads[i] = new Thread(this.markThreads[i]);
-            this.threads[i].start();
-            i += 1;
-        }
 
-        for (Thread t : this.threads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        this.markThreads[0].setXandY(x + this.directions[0][0], y + this.directions[0][1], x + this.directions[1][0],
+                y + this.directions[1][1]);
+        this.mark1.set(true);
+        this.markThreads[1].setXandY(x + this.directions[2][0], y + this.directions[2][1], x + this.directions[3][0],
+                y + this.directions[3][1]);
+        this.mark2.set(true);
+
+        while (this.mark1.get() || this.mark2.get()) {
         }
     }
 
@@ -161,6 +188,9 @@ public class ParallelRandomizedPrims {
         int x = r.nextInt(this.width);
         int y = r.nextInt(this.height);
 
+        this.threads[0].start();
+        this.threads[1].start();
+
         mark(x, y);
 
         /*
@@ -183,7 +213,6 @@ public class ParallelRandomizedPrims {
                 fy = f[1];
             } catch (NullPointerException e) {
                 e.printStackTrace();
-                System.out.println(this.frontiers.size());
                 break;
             }
 
@@ -199,6 +228,9 @@ public class ParallelRandomizedPrims {
             this.grid[ny][nx] |= opp;
             mark(fx, fy);
         }
+
+        this.markThreads[0].stop();
+        this.markThreads[1].stop();
 
         return this.grid;
     }

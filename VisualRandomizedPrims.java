@@ -4,7 +4,7 @@ import javax.swing.JPanel;
 import java.awt.Dimension;
 import java.awt.Graphics;
 
-public class MazeVisualizer extends JPanel {
+public class VisualRandomizedPrims extends JPanel {
     private int width;
     private int height;
     private int[][] grid;
@@ -19,7 +19,7 @@ public class MazeVisualizer extends JPanel {
     private static int w = 50;
     private static int h = 50;
 
-    public MazeVisualizer(int[][] grid, int width, int height) {
+    public VisualRandomizedPrims(int[][] grid, int width, int height) {
         this.grid = grid;
         this.width = width;
         this.height = height;
@@ -50,10 +50,10 @@ public class MazeVisualizer extends JPanel {
     }
 
     public static void main(String[] args) {
-        ParallelRandomizedPrims prp = new ParallelRandomizedPrims(w, h);
+        ConcurrentRandomizedPrims prp = new ConcurrentRandomizedPrims(w, h);
         int[][] grid = prp.run();
 
-        MazeVisualizer visualizer = new MazeVisualizer(grid, w, h);
+        VisualRandomizedPrims visualizer = new VisualRandomizedPrims(grid, w, h);
 
         JFrame frame = new JFrame("Maze Generator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
