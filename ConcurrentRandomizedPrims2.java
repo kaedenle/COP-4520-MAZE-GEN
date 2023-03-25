@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ConcurrentRandomizedPrims {
+public class ConcurrentRandomizedPrims2 {
     private int width;
     private int height;
     private int[][] grid;
@@ -30,7 +30,7 @@ public class ConcurrentRandomizedPrims {
     private AtomicBoolean mark1 = new AtomicBoolean();
     private AtomicBoolean mark2 = new AtomicBoolean();
 
-    public ConcurrentRandomizedPrims(int width, int height) {
+    public ConcurrentRandomizedPrims2(int width, int height) {
         this.width = width;
         this.height = height;
         this.grid = new int[height][width];

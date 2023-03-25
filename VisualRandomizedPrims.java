@@ -50,8 +50,8 @@ public class VisualRandomizedPrims extends JPanel {
     }
 
     public static void main(String[] args) {
-        ConcurrentRandomizedPrims prp = new ConcurrentRandomizedPrims(w, h);
-        int[][] grid = prp.run();
+        ConcurrentRandomizedPrims4 prp4 = new ConcurrentRandomizedPrims4(w, h);
+        int[][] grid = prp4.run();
 
         VisualRandomizedPrims visualizer = new VisualRandomizedPrims(grid, w, h);
 

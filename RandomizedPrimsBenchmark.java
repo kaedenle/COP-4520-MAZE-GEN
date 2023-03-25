@@ -5,7 +5,8 @@ import java.io.OutputStream;
 public class RandomizedPrimsBenchmark {
     public static void main(String[] args) {
         RandomizedPrims rp;
-        ConcurrentRandomizedPrims prp;
+        ConcurrentRandomizedPrims2 prp2;
+        ConcurrentRandomizedPrims4 prp4;
 
         OutputStream output = null;
         try {
@@ -15,11 +16,13 @@ public class RandomizedPrimsBenchmark {
         }
 
         for (int i = 0; i < 50; i++) {
-            // rp = new RandomizedPrims(5000, 5000);
-            prp = new ConcurrentRandomizedPrims(100, 100);
+            // rp = new RandomizedPrims(1000, 1000);
+            // prp2 = new ConcurrentRandomizedPrims2(50, 50);
+            prp4 = new ConcurrentRandomizedPrims4(50, 50);
             long start = System.currentTimeMillis();
             // rp.run();
-            prp.run();
+            // prp2.run();
+            prp4.run();
             long elapsedTime = System.currentTimeMillis() - start;
             try {
                 output.write(String.valueOf(elapsedTime).getBytes());
