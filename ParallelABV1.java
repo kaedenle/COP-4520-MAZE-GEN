@@ -177,8 +177,8 @@ class MazeObj extends JPanel{
 public class ParallelABV1 {
 
 	public static void main(String[] args) {
-		int ThreadCount = 4;
-		int Dimension = 200;
+		int ThreadCount = 1;
+		int Dimension = 500;
 		int NumRuns = 300;
 		Thread[] tList = new Thread[ThreadCount];
 		Node[] nList = new Node[ThreadCount];
@@ -216,7 +216,7 @@ public class ParallelABV1 {
 
 			long endTime = System.nanoTime();
 	        double totalTime = (endTime - startTime);
-	        String timeOutput = (totalTime/1000000 + " ms");
+	        String timeOutput = Double.toString(totalTime/1000000);
 			if(j != NumRuns) Node.Maze = null;
             if(j == 0) continue;
 	        output += timeOutput + "\n";

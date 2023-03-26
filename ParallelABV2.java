@@ -324,8 +324,8 @@ public class ParallelABV2 {
 		//Node2 n = new Node2(10, 10, 0, 50);
 		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/parallelTimeOutput.txt");
 		String output = "";
-		int NumThreads = 20;
-		int Dimensions = 200;
+		int NumThreads = 2;
+		int Dimensions = 1000;
 		int NumRuns = 300;
 		//insert cmd line args (Maze Size, Thread Num, Threashold)
 		//Dimension of the maze, make sure it's initialized before this
@@ -379,7 +379,7 @@ public class ParallelABV2 {
 	        }
 			long endTime = System.nanoTime();
 	        double totalTime = (endTime - startTime);
-	        String timeOutput = (totalTime/1000000 + " ms");
+	        String timeOutput = Double.toString(totalTime/1000000);
             if(j == 0) continue;
 	        output += timeOutput + "\n";
 		}//end of runs

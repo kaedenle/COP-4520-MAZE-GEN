@@ -29,6 +29,7 @@ class MazeObj2 extends JPanel{
 	//Amount of threads
 	public int N;
 	public JFrame frame;
+	public int CellSize = 20;
 	
 	public MazeObj2(int rows, int cols, int N) {
 		//the actual maze
@@ -54,7 +55,7 @@ class MazeObj2 extends JPanel{
 				grid[i][j] = 0;
 		}
 		
-		setPreferredSize(new Dimension(cols * 20, rows * 20));
+		setPreferredSize(new Dimension(cols * CellSize, rows * CellSize));
 	}
 	public void SetNList(int n)
 	{
@@ -124,33 +125,33 @@ class MazeObj2 extends JPanel{
 	        for (int i = 0; i < this.rows; i++) {
 	            for (int j = 0; j < this.cols; j++) {
 	            	int amount = 0;
-	                int x = j * 20;
-	                int y = i * 20;
+	                int x = j * CellSize;
+	                int y = i * CellSize;
 
 	                if ((this.grid[i][j] & bitmasks[0]) == 0) // Top wall
 	                {
-	                	g.drawLine(x, y, x + 20, y);
+	                	g.drawLine(x, y, x + CellSize, y);
 	                	amount += 1;
 	                }     
 	                if ((this.grid[i][j] & bitmasks[1]) == 0) // Right wall
 	                {
-	                	g.drawLine(x + 20, y, x + 20, y + 20);
+	                	g.drawLine(x + CellSize, y, x + CellSize, y + CellSize);
 	                	amount += 1;
 	                }
 	                if ((this.grid[i][j] & bitmasks[2]) == 0) // Bottom wall
 	                {    
-	                	g.drawLine(x + 20, y + 20, x, y + 20);
+	                	g.drawLine(x + CellSize, y + CellSize, x, y + CellSize);
 	                	amount += 1;
 	                }    
 	                if ((this.grid[i][j] & bitmasks[3]) == 0) // Left wall
 	                {
-	                	g.drawLine(x, y + 20, x, y);
+	                	g.drawLine(x, y + CellSize, x, y);
 	                	amount += 1;
 	                }
 	                if(amount > 3)
 	                {
 	                	g.setColor(new Color(220, 220, 220));
-	                    g.fillRect(x + 1, y + 1, 19, 19);
+	                    g.fillRect(x + 1, y + 1, CellSize - 1, CellSize - 1);
 	                    g.setColor(new Color(0, 0, 0));
 	                }
 	            }
@@ -158,7 +159,7 @@ class MazeObj2 extends JPanel{
 	        g.setColor(new Color(0, 255, 0));
         	for(Node2 n : nList) {
         		if(n == null) continue;
-		        g.fillRect(n.poscols * 20, n.posrows * 20, 20, 20);
+		        g.fillRect(n.poscols * CellSize, n.posrows * CellSize, CellSize, CellSize);
         	}
 	        //Draw the boundaries of each thread
 	        //set stroke to be more noticable
@@ -169,12 +170,12 @@ class MazeObj2 extends JPanel{
 	        //draw column boundaries
 	        /*for(int i = 1; i < ColAmount; i++) {
 	        	int max = (int)(((float)i/(float)ColAmount) * cols);
-	        	g.drawLine(max * 20, 0, max * 20, 20 * cols);
+	        	g.drawLine(max * CellSize, 0, max * CellSize, CellSize * cols);
 	        }
 	        //draw row boundaries
 	        for(int i = 1; i < RowAmount; i++) {
 	        	int max = (int)(((float)i/(float)RowAmount) * rows);
-	        	g.drawLine(0, max * 20, rows * 20, max * 20);
+	        	g.drawLine(0, max * CellSize, rows * CellSize, max * CellSize);
 	        }*/
 	        g2.setStroke(new BasicStroke(1));
 	    }
@@ -255,7 +256,7 @@ class Node2 implements Runnable{
 			Maze.frame.validate();
 			  Maze.frame.repaint();
 			  try {
-				Thread.sleep(100);
+				Thread.sleep(10);
 			  } 
 			  catch (InterruptedException e) {
 					// TODO Auto-generated catch block
@@ -370,13 +371,13 @@ class Node2 implements Runnable{
 				  //System.out.println(Thread.currentThread().getId() + " Unlocking");
 				  Maze.frame.validate();
 				  Maze.frame.repaint();
-				  try {
-					Thread.sleep(10);
+				  /*try {
+					Thread.sleep(1);
 				  } 
 				  catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-				  }
+				  }*/
 				  count.set(0);
 				  lock.notifyAll();
 				  if(remaining <= 0)
@@ -393,12 +394,13 @@ public class ConcurrentABV2Visual {
 		//Hard limit on # of threads is N * N as each thread has one square allocated to it
 		//Soft limit is half of N * N as anything beyond that produces strange mazes
 		//Node2 n = new Node2(10, 10, 0, 50);
-		int NumThreads = 4;
-		int Dimensions = 10;
+		int NumThreads = 20;
+		int Dimensions = 100;
 		Node2.threashold = 50;
 		Thread[] tList = new Thread[NumThreads];
 		Node2.MazeInit(Dimensions, Dimensions, NumThreads);
 		Node2.Maze.SetNList(NumThreads);
+		Node2.Maze.CellSize = 5;
 		//counters to assign threads to quad
 		int rowcounter = 0, colcounter = 0;
 		

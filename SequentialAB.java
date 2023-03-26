@@ -189,8 +189,8 @@ public class SequentialAB {
 	
 	public static void main(String[] args) {
 		boolean stepMode = false;
-		int timesRun = 50;
-        int N = 20;
+		int timesRun = 300;
+        int N = 1000;
         Maze m = new Maze(N, N, stepMode);
 		Path fileName = Path.of(Paths.get("").toAbsolutePath().toString() + "/timeOutput.txt");
 		String output = "";
