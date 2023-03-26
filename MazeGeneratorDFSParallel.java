@@ -1,5 +1,9 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.concurrent.TimeUnit;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -26,8 +30,9 @@ public class MazeGeneratorDFSParallel extends JPanel {
         setPreferredSize(new Dimension(cols * cellSize, rows * cellSize));
         generateMaze();
     }
-
+    
     private void generateMaze() {
+        AtomicLong startTime = new AtomicLong(System.nanoTime());
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 visited[i][j] = false;
@@ -52,6 +57,9 @@ public class MazeGeneratorDFSParallel extends JPanel {
         // Open entrance and exit
         walls[0][0][3] = false;
         walls[rows - 1][cols - 1][1] = false;
+
+        AtomicLong endTime = new AtomicLong(System.nanoTime());
+        System.out.println("Time taken to generate the maze: " + (endTime.get() - startTime.get()) + " nanoseconds");
     }
 
     private void dfsParallel(int i, int j, ExecutorService executor) {
