@@ -1,8 +1,10 @@
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class MazeGeneratorDFS extends JPanel {
     private int rows;
@@ -24,6 +26,7 @@ public class MazeGeneratorDFS extends JPanel {
     }
 
     private void generateMaze() {
+        AtomicLong startTime = new AtomicLong(System.nanoTime());
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 visited[i][j] = false;
@@ -39,11 +42,14 @@ public class MazeGeneratorDFS extends JPanel {
         // Open entrance and exit
         walls[0][0][3] = false;
         walls[rows - 1][cols - 1][1] = false;
+
+        AtomicLong endTime = new AtomicLong(System.nanoTime());
+        System.out.println("Time taken to generate the maze: " + (endTime.get() - startTime.get()) + " nanoseconds");
     }
 
     private void dfs(int i, int j) {
         visited[i][j] = true;
-        int[] directions = { 0, 1, 2, 3 };
+        int[] directions = {0, 1, 2, 3};
         shuffleArray(directions, random);
 
         for (int direction : directions) {
@@ -128,3 +134,4 @@ public class MazeGeneratorDFS extends JPanel {
         frame.setVisible(true);
     }
 }
+
