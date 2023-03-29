@@ -30,6 +30,8 @@ class MazeObj2 extends JPanel{
 	public int N;
 	public JFrame frame;
 	public int CellSize = 20;
+	public boolean drawlines = true;
+	public boolean drawthreads = true;
 	
 	public MazeObj2(int rows, int cols, int N) {
 		//the actual maze
@@ -157,26 +159,32 @@ class MazeObj2 extends JPanel{
 	            }
 	        }
 	        g.setColor(new Color(0, 255, 0));
-        	for(Node2 n : nList) {
-        		if(n == null) continue;
-		        g.fillRect(n.poscols * CellSize, n.posrows * CellSize, CellSize, CellSize);
-        	}
+			if(drawthreads)
+			{
+				for(Node2 n : nList) {
+					if(n == null) continue;
+					g.fillRect(n.poscols * CellSize, n.posrows * CellSize, CellSize, CellSize);
+				}
+			}
 	        //Draw the boundaries of each thread
 	        //set stroke to be more noticable
 	        Graphics2D g2 = (Graphics2D) g;
 	        g2.setStroke(new BasicStroke(2));
 	        
 	        g.setColor(new Color(255, 0, 0));
-	        //draw column boundaries
-	        /*for(int i = 1; i < ColAmount; i++) {
-	        	int max = (int)(((float)i/(float)ColAmount) * cols);
-	        	g.drawLine(max * CellSize, 0, max * CellSize, CellSize * cols);
-	        }
-	        //draw row boundaries
-	        for(int i = 1; i < RowAmount; i++) {
-	        	int max = (int)(((float)i/(float)RowAmount) * rows);
-	        	g.drawLine(0, max * CellSize, rows * CellSize, max * CellSize);
-	        }*/
+			if(drawlines)
+			{
+				//draw column boundaries
+				for(int i = 1; i < ColAmount; i++) {
+					int max = (int)(((float)i/(float)ColAmount) * cols);
+					g.drawLine(max * CellSize, 0, max * CellSize, CellSize * cols);
+				}
+				//draw row boundaries
+				for(int i = 1; i < RowAmount; i++) {
+					int max = (int)(((float)i/(float)RowAmount) * rows);
+					g.drawLine(0, max * CellSize, rows * CellSize, max * CellSize);
+				}
+			}
 	        g2.setStroke(new BasicStroke(1));
 	    }
 }
@@ -284,6 +292,7 @@ class Node2 implements Runnable{
 		  }
 		  else {
 			  lockOther.notifyAll();
+			  Maze.drawlines = false;
 		  }
 		}
 		//guarentee that at least one gets culled by culling last one if none was picked
@@ -400,7 +409,7 @@ public class ConcurrentABV2Visual {
 		Thread[] tList = new Thread[NumThreads];
 		Node2.MazeInit(Dimensions, Dimensions, NumThreads);
 		Node2.Maze.SetNList(NumThreads);
-		Node2.Maze.CellSize = 5;
+		Node2.Maze.CellSize = 10;
 		//counters to assign threads to quad
 		int rowcounter = 0, colcounter = 0;
 		
